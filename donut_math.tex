@@ -1,0 +1,232 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+%\usepackage{color}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathabx}
+\usepackage{commath}
+\usepackage{bbold}
+
+\geometry{textwidth=6.5in, textheight=9.0in,
+    marginparsep=7pt, marginparwidth=.6in}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{0.08in}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand*{\annot}[1]{\tag*{\footnotesize{\textcolor{gray}{#1}}}}
+\newcommand{\like}{\mathcal{L}}
+\let\Pr\undefined
+\DeclareMathOperator{\R}{R}
+
+\title{Donut Maths}
+\author{Josh Meyers}
+\date{January 2018}
+
+\begin{document}
+
+We aim to build a model for the HSC field-dependent wavefront that can be trained using out-of-focus
+``donut'' images of stars and parameterized in such a way that only a few variables need to be fit
+to model arbitrary in-focus exposures.
+
+Our wavefront model for the ith exposure is:
+
+\begin{equation}
+    W^i\left(\vec{u}; \vec{\theta}\right) = W_\mathrm{CCD}\left(\R \vec{u}; \R \vec{\theta}\right) + W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) + W_\mathrm{pert}^i\left(\vec{u}; \vec{\theta}\right)
+\end{equation}
+
+The left hand side $W^i\left(\vec{u}; \vec{\theta}\right)$ is the wavefront for the $i$th exposure
+evaluated at pupil position $\vec{u}$ and field position $\vec{\theta}$.  These position vectors
+should be understood to be aligned with the altitude and azimuth of an exposure.  Roughly speaking,
+$\vec{u}$ corresponds to a point on the primary mirror, independent of exposure, and a
+$\vec{\theta}$ indicates a location on the focal plane in the absence of any camera rotation.  The
+reality of non-zero camera rotation then implies that a given $\vec{\theta}$ can land anywhere on a
+circle in the physical CCD array, depending on the rotator angle.
+
+We model the wavefront in three terms.
+
+\begin{itemize}
+
+    \item $W_\mathrm{CCD}\left(\R \vec{u}; \R \vec{\theta}\right)$  This term is intended to model
+    wavefront perturbations that are fixed to the CCD array.  This term may therefore be
+    discontinuous across chip boundaries. The 2d rotation operator $\R$ is to account for the camera
+    rotator.  When $\R$ acts on $\vec{\theta}$, it is because we are evaluating the wavefront at a
+    rotated position compared to where it is defined.  When $\R$ acts on $\vec{u}$, it is because we
+    wish to know the wavefront in the alt-az coordinate frame but it is assumed fixed in the CCD
+    frame.  This term is static (independent of the exposure index $i$).
+
+    \item $W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right)$  This term is also static, but aligned
+    with the alt-az coordinate system, and roughly corresponds to the wavefront present in the HSC
+    design, plus the mean of any additional aberrations resulting from the average gravitational
+    loading or permanent misalignments in the optical system.  This term should be continuous over
+    the full focal plane.  We also expect that it should be the dominant term, and the other two
+    terms are simply perturbations around this one.
+
+    \item $W_\mathrm{pert}^i\left(\vec{u}; \vec{\theta}\right)$  This term is dynamic (depends on
+    the exposure index $i$.)  It is intended to capture the effects of flexure, or temperature
+    variations, or any other time-dependent perturbations to the wavefront.  This term should also
+    be continuous over the full focal plane.
+
+\end{itemize}}
+
+In general, we decompose the $\vec{u}$ dependence of the wavefront into Zernike polynomials indexed
+by $j$.
+
+\begin{equation}
+    W^i\left(\vec{u}; \vec{\theta}\right) = \sum_{j=4}^{j_\mathrm{max}} a_j^i(\vec{\theta}) Z_j(\vec{u})
+\end{equation}
+
+The trick is to figure out the $\theta$ dependence of the coefficients.
+
+\section{Principle Component Analysis}
+
+The simplest model may be to assume that $W_\mathrm{CCD} = 0$, and that $W_\mathrm{tel}$ and
+$W_\mathrm{pert}^i$ can be decomposed using principle component analysis (PCA) of the available
+wavefront constraints from pairs of donut images.  To make this possible, one must first get the
+wavefronts for the individual pairs onto the same system to perform the PCA.  One way to do this is
+to expand the wavefront from each donut exposure pair in a Zernike basis itself, thus making a
+double Zernike basis for the entire field-dependent wavefront:
+
+\begin{equation}
+    a_j^i(\vec{\theta}) = \sum_{k=1}^{k_\mathrm{max}} b_{jk}^i Z_k(\vec{\theta})
+\end{equation}
+
+Each donut exposure pair has its own set of double Zernike coefficients $b_{jk}^i$.  We would then
+associate
+
+\begin{equation}
+    W_\mathrm{tel}(\vec{u}, \vec{\theta}) = \sum_{jk} b_{jk}^0 Z_j(\vec{u}) Z_k(\vec{\theta})
+\end{equation}
+
+where $b_{jk}^0 = \langle b_{jk}^i \rangle_i$, and
+
+\begin{equation}
+    W_\mathrm{pert}^i(\vec{u}, \vec{\theta}) = \sum_{\ell j k} c^i_\ell p^\ell_{jk} Z_j(\vec{u}) Z_k(\vec{\theta})
+\end{equation}
+
+where $p^\ell_{jk}$ are the principle components of $b^i_{jk} - \langle b^i_{jk}\rangle_i$, and
+$c_\ell^i$ is the projection of the $\ell$th principle component onto the $i$th set of double
+Zernike coefficients.  When switching from model building using donut pairs $\{i\}$ to model fitting
+of arbitrary in-focus exposures $\{m\}$, one would simply optimize a given loss function over the
+$c^m_\ell$s for the $m$th in-focus exposure.
+
+Note that the Zernike orders need not be the same for $W_\mathrm{tel}$ and $W_\mathrm{pert}$. E.g.,
+the principle components might only index up to $j^\mathrm{pert}_\mathrm{max}=11$ and
+$k^\mathrm{pert}_\mathrm{max}=3$, while the static piece may include terms up to
+$j^\mathrm{tel}_\mathrm{max}=21$ and $k^\mathrm{tel}_\mathrm{max}=21$ or something like that.
+
+\section{Full Double Zernike}
+
+We can also think about expanding $W_\mathrm{CCD}$ in a double Zernike basis.
+
+In this case, because there can be discontinuities between the CCDs, we need a separate expansion
+for each CCD.  Also, since the CCDs are relatively small regions of the entire focal plane, it
+probably makes sense to limit the order of focal plane expansion over each CCD, say $Z_1$, $Z_2$,
+and $Z_3$, (effectively a plane).  $W_\mathrm{CCD}$ over the whole focal plane is then the
+concatenation in space of the term for each individual CCD:
+
+\begin{equation}
+    W^i_\mathrm{CCD}(\vec{u}, \vec{\theta}) = \sum_{n=1}^{n_\mathrm{CCD}} W^i_{\mathrm{CCD},n}(\vec{u}, \vec{\theta}) \mathbb{1}_n(\vec{\theta})
+\end{equation}
+
+where the indicator function $\mathbb{1}_n(\vec{\theta})$ is 1 if $\theta$ lands on the $n$th CCD
+and 0 otherwise, and $W^i_n(\vec{u}, \vec{\theta})$ is the CCD wavefront for the $n$th CCD.
+
+\begin{equation}
+    W^i_\mathrm{CCD,n}(\vec{u}, \vec{\theta}) = \sum_{k=1}^{k^\mathrm{CCD}_\mathrm{max}} \sum_{j=4}^{j^\mathrm{CCD}_\mathrm{max}} d_{njk} Z_j(\vec{u}) Z_k(\vec{\theta})
+\end{equation}
+
+The total number of free parameters in this model is then:
+
+\begin{itemize}
+    \item $N[W_\mathrm{CCD}] = n_\mathrm{CCD} \times (j^\mathrm{CCD}_\mathrm{max}-3) \times k^\mathrm{CCD}_\mathrm{max}$
+    \item $N[W_\mathrm{tel}] = (j^\mathrm{tel}_\mathrm{max}-3) \times k^\mathrm{tel}_\mathrm{max}$
+    \item $N[W_\mathrm{pert}] = n_\mathrm{exp} \times (j^\mathrm{pert}_\mathrm{max}-3) \times k^\mathrm{pert}_\mathrm{max}$
+    \item $N = N[W_\mathrm{CCD}] + N[W_\mathrm{tel}] + N[W_\mathrm{pert}]$
+\end{itemize}
+
+A fully general model for HSC might use the values in Table \ref{tab:1}
+
+\begin{table}[h]
+    \center
+    %\caption{Table 1}
+    \label{tab:1}
+    \begin{tabular}{c|c}
+        \hline
+        $n_\mathrm{CCD}$ & 104 \\
+        $j^\mathrm{CCD}_\mathrm{max}$ & 21 \\
+        $k^\mathrm{CCD}_\mathrm{max}$ & 3 \\
+        $j^\mathrm{tel}_\mathrm{max}$ & 21 \\
+        $k^\mathrm{tel}_\mathrm{max}$ & 21 \\
+        $n_{exp}$ & 10 \\
+        $j^\mathrm{pert}_\mathrm{max}$ & 21 \\
+        $k^\mathrm{pert}_\mathrm{max}$ & 21 \\
+        \hline
+        $N[W_\mathrm{CCD}]$ & 5616 \\
+        $N[W_\mathrm{tel}]$ & 378 \\
+        $N[W_\mathrm{pert}]$ & 378 \\
+        \hline
+        $N$ & 9774
+    \end{tabular}
+\end{table}
+
+I have roughly 20,000 donut pairs, each measuring 18 Zernike coefficients for a total of $\sim
+360000$ data points, so plenty of constraints for 9774 parameters in principle.  Note that this
+model is completely linear in the parameters, so linear algebra techniques can be used to find a
+solution.
+
+I think it's also the case that the problems for differing pupil Zernikes are almost completely
+separable.  For instance, I think the problem for $j=4$ (pupil defocus) doesn't depend on any
+coefficients or data except for when $j=4$.  Similarly, $j=5$ and $j=6$ can be solved without
+reference to any other $j$s, although the 5 and 6 cannot be further broken apart because these two
+Zernikes mix together under a rotation.  Similar statements apply for groups of Zernikes: $\{7,
+8\}$, $\{9,10\}$, $\{11\}$, $\{12,13\}$, $\{14,15\}$, $\{16, 17\}$, $\{18,19\}$, $\{20, 21\}$,
+$\{22\}$, and so on.
+
+Fitting a full model with 9774 parameters should reveal which parameters are actually important. I'd
+say it's very feasible that forcing small parameters to zero could reduce the size of the problem
+significantly, say to the values in Table 2.
+
+\begin{table}[h]
+    \center
+    %\caption{Table 1}
+    \label{tab:1}
+    \begin{tabular}{c|c}
+        \hline
+        $n_\mathrm{CCD}$ & 104 \\
+        $j^\mathrm{CCD}_\mathrm{max}$ & 11 \\
+        $k^\mathrm{CCD}_\mathrm{max}$ & 1 \\
+        $j^\mathrm{tel}_\mathrm{max}$ & 21 \\
+        $k^\mathrm{tel}_\mathrm{max}$ & 21 \\
+        $n_{exp}$ & 10 \\
+        $j^\mathrm{pert}_\mathrm{max}$ & 21 \\
+        $k^\mathrm{pert}_\mathrm{max}$ & 3 \\
+        \hline
+        $N[W_\mathrm{CCD}]$ & 1872 \\
+        $N[W_\mathrm{tel}]$ & 378 \\
+        $N[W_\mathrm{pert}]$ & 540 \\
+        \hline
+        $N$ & 2790
+    \end{tabular}
+\end{table}
+
+It may also become apparent that some parameters vary together.  For instance, the two astigmatism
+terms are probably related, as are the two coma terms, two trefoil terms, and so on.  Hopefully this
+will be revealed from the large fits above, or could be investigated using raytracing simulations.
+
+When it comes time to fitting parameter values to in-focus images, only the $W_\mathrm{pert}$
+parameters would be varied to optimize a given loss function.  Hopefully we'll be able to show that
+the number of these parameters that matter is just a few (there are $54$ parameters per exposure in
+Table 2, but presumably we could reduce this further as discussed above).
+
+\section{More PCA}
+
+I haven't come up with a completely general PCA that can handle the complications introduced by the
+rotator so far.  (Given that the model is linear though, I wouldn't be surprised if there is a way
+to still do PCA).  One idea that might be workable though is to first determine $W_\mathrm{CCD}$ and
+$W_\mathrm{tel}$, and then do PCA on just the $W^i_\mathrm{pert}$ parameters that remain.
+
+\end{document}
