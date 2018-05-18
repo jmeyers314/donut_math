@@ -46,31 +46,31 @@ $\vec{\theta}$ indicates a location on the focal plane in the absence of any cam
 reality of non-zero camera rotation then implies that a given $\vec{\theta}$ can land anywhere on a
 circle in the physical CCD array, depending on the rotator angle.
 
-We model the wavefront in three terms.
+We model the wavefront in three terms .
 
 \begin{itemize}
 
-    \item $W_\mathrm{CCD}\left(\R \vec{u}; \R \vec{\theta}\right)$  This term is intended to model
-    wavefront perturbations that are fixed to the CCD array.  This term may therefore be
-    discontinuous across chip boundaries. The 2d rotation operator $\R$ is to account for the camera
-    rotator.  When $\R$ acts on $\vec{\theta}$, it is because we are evaluating the wavefront at a
-    rotated position compared to where it is defined.  When $\R$ acts on $\vec{u}$, it is because we
-    wish to know the wavefront in the alt-az coordinate frame but it is assumed fixed in the CCD
-    frame.  This term is static (independent of the exposure index $i$).
+  \item $W_\mathrm{CCD}\left(\R \vec{u}; \R \vec{\theta}\right)$  This term is intended to model
+  wavefront perturbations that are fixed to the CCD array.  This term may therefore be
+  discontinuous across chip boundaries. The 2d rotation operator $\R$ is to account for the camera
+  rotator.  When $\R$ acts on $\vec{\theta}$, it is because we are evaluating the wavefront at a
+  rotated position compared to where it is defined.  When $\R$ acts on $\vec{u}$, it is because we
+  wish to know the wavefront in the alt-az coordinate frame but it is assumed fixed in the CCD
+  frame.  This term is static (independent of the exposure index $i$).
 
-    \item $W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right)$  This term is also static, but aligned
-    with the alt-az coordinate system, and roughly corresponds to the wavefront present in the HSC
-    design, plus the mean of any additional aberrations resulting from the average gravitational
-    loading or permanent misalignments in the optical system.  This term should be continuous over
-    the full focal plane.  We also expect that it should be the dominant term, and the other two
-    terms are simply perturbations around this one.
+  \item $W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right)$  This term is also static, but aligned
+  with the alt-az coordinate system, and roughly corresponds to the wavefront present in the HSC
+  design, plus the mean of any additional aberrations resulting from the average gravitational
+  loading or permanent misalignments in the optical system.  This term should be continuous over
+  the full focal plane.  We also expect that it should be the dominant term, and the other two
+  terms are simply perturbations around this one.
 
-    \item $W_\mathrm{pert}^i\left(\vec{u}; \vec{\theta}\right)$  This term is dynamic (depends on
-    the exposure index $i$.)  It is intended to capture the effects of flexure, or temperature
-    variations, or any other time-dependent perturbations to the wavefront.  This term should also
-    be continuous over the full focal plane.
+  \item $W_\mathrm{pert}^i\left(\vec{u}; \vec{\theta}\right)$  This term is dynamic (depends on
+  the exposure index $i$.)  It is intended to capture the effects of flexure, or temperature
+  variations, or any other time-dependent perturbations to the wavefront.  This term should also
+  be continuous over the full focal plane.
 
-\end{itemize}}
+\end{itemize}
 
 In general, we decompose the $\vec{u}$ dependence of the wavefront into Zernike polynomials indexed
 by $j$.
@@ -150,7 +150,7 @@ The total number of free parameters in this model is then:
 
 A fully general model for HSC might use the values in Table \ref{tab:1}
 
-\begin{table}[h]
+\begin{table}[ht]
     \center
     %\caption{Table 1}
     \label{tab:1}
@@ -190,10 +190,10 @@ Fitting a full model with 9774 parameters should reveal which parameters are act
 say it's very feasible that forcing small parameters to zero could reduce the size of the problem
 significantly, say to the values in Table 2.
 
-\begin{table}[h]
+\begin{table}[ht]
     \center
-    %\caption{Table 1}
-    \label{tab:1}
+    %\caption{Table 2}
+    \label{tab:2}
     \begin{tabular}{c|c}
         \hline
         $n_\mathrm{CCD}$ & 104 \\

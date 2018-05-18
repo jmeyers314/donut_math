@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+%\usepackage{color}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathabx}
+\usepackage{commath}
+\usepackage{bbold}
+
+\geometry{textwidth=6.5in, textheight=9.0in,
+    marginparsep=7pt, marginparwidth=.6in}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{0.08in}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand*{\annot}[1]{\tag*{\footnotesize{\textcolor{gray}{#1}}}}
+\newcommand{\like}{\mathcal{L}}
+\let\Pr\undefined
+\DeclareMathOperator{\R}{R}
+
+\title{Wavefront model}
+\author{Josh Meyers}
+\date{May 2018}
+
+\begin{document}
+
+\section{Introduction}
+
+We aim to build a model for the HSC field-dependent optics wavefront that can be
+trained using out-of-focus ``donut'' images of stars and then used to fit the
+optics contribution of in-focus PSFs.  Developing this model is part of our
+ongoing goal to factor the PSF into independent contributions from the
+atmosphere, optics and sensors.  Such a factorization has many potential
+benefits, the greatest of which is likely the ability to capture all of the
+effects of CCD-to-CCD discontinuities into the optical component, allowing the
+sensor  and particularly the atmospheric component to be smoothly interpolated
+across the entire field-of-view.  Additional benefits may also include enabling
+a significant part of the PSF variation to be captured using just a few
+parameters, better characterization of high-frequency PSF components that are
+not well constrained empirically using finitely sampled data, and increased
+ability to characterize the wavelength dependence of the PSF by characterizing
+the disparate wavelength dependencies of the individual components.
+
+\section{Model}
+
+Our model for the optical part of the PSF is Fourier optics.  Specifically, the
+optical PSF is described by a pupil-obscuration function and wavefront function.
+(See DMTN-064 for more details).  Our primary concern for this note is the
+spatial variability of the wavefront both over the pupil plane and over the
+focal plane (i.e., the wavefront for a single exposure is a function from
+$\mathbb{R}^4$ to $\mathbb{R}$).  We break down the wavefront model of the $i$th
+exposure into three constituent components as follows:
+
+\begin{equation}
+    W^i\left(\vec{u}; \vec{\theta}\right) =
+    W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) +
+    W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right) +
+    W_\mathrm{CCD}\left(\R_\phi \vec{u}; \R_\phi \vec{\theta}\right)
+\end{equation}
+
+In the above, $i$ is an index over exposures, $\vec{u}$ is a coordinate in the
+entrance pupil, $\vec{\theta}$ is the field angle (or equivalently, a location
+on the focal plane).  The coordinate system for $\vec{u}$ and $\vec{\theta}$ are
+understood to align with the altitude and azimuth axes of the telescope.
+This means that in the presence of a rotator, they are not fixed with respect to
+focal plane or CCDs themselves.
+
+The individual terms of the model are then:
+
+\begin{itemize}
+
+  \item $W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right)$  This term is
+  intended to model the wavefront perturbations that are present in the
+  otherwise unperturbed optical design of the telescope.  It is independent of
+  the exposure index $i$, and continuous over the pupil and field of view.
+
+  \item $W_\mathrm{CCD}\left(\R_\phi \vec{u}; \R_\phi \vec{\theta}\right)$  This
+  term is intended to model wavefront perturbations that are fixed to the CCD
+  array, such as may originate from displacements in the height of each CCD.  It
+  is continuous in the pupil, by we allow discontinuities between different CCDs
+  across the focal plane.  Because this term is constant in focal-plane
+  coordinates, but not in our alt-az aligned $\vec{u}$ and $\vec{\theta}$
+  coordinates, we are required to rotate from one system to the other.  This is
+  accomplished by the rotation operators $\R_\phi$, where $\phi$ indicates the
+  angle of rotation.  This term also does not depend on the exposure index $i$.
+
+  \item $W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right)$  This term is
+  dynamic (depends on the exposure index $i$.)  It is intended to capture the
+  effects of flexure, or temperature variations, or any other time-dependent
+  continuous perturbations to the wavefront.
+
+\end{itemize}
+
+Need to break down individual terms into double zernike basis.
+
+In DMTN-064, we described how we measured individual wavefronts for a limited
+number of pairs of intra- and extra- focal images and specific locations within
+the field of view.  For these "donut" images, we used a forward model that
+decomposed the delivered wavefront into a Zernike polynomial series.  I.e.:
+
+\begin{equation}
+    W^i\left(\vec{u}; \vec{\theta_\ast}\right) = \sum_{j=4}^{j_\mathrm{max}} a_j^i(\vec{\theta_\ast}) Z_j(\vec{u})
+\end{equation}
+
+
+
+\section{Donut fits}
+\section{In-focus fits}
+\section{Future}
+
+\end{document}
