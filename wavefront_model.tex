@@ -33,43 +33,43 @@
 We aim to build a model for the HSC field-dependent optics wavefront that can be
 trained using out-of-focus ``donut'' images of stars and then used to fit the
 optics contribution of in-focus PSFs.  Developing this model is part of our
-ongoing goal to factor the PSF into independent contributions from the
+ongoing effort to factor the PSF into independent contributions from the
 atmosphere, optics and sensors.  Such a factorization has many potential
 benefits, the greatest of which is likely the ability to capture all of the
 effects of CCD-to-CCD discontinuities into the optical component, allowing the
-sensor  and particularly the atmospheric component to be smoothly interpolated
+sensor and particularly the atmospheric component to be smoothly interpolated
 across the entire field-of-view.  Additional benefits may also include enabling
-a significant part of the PSF variation to be captured using just a few
-parameters, better characterization of high-frequency PSF components that are
-not well constrained empirically using finitely sampled data, and increased
-ability to characterize the wavelength dependence of the PSF by characterizing
-the disparate wavelength dependencies of the individual components.
+a significant part of the PSF variation across the field of view to be captured
+using just a few parameters, better characterization of high-frequency PSF
+components that are not well constrained empirically using finitely sampled
+data, and increased ability to characterize the wavelength dependence of the PSF
+by characterizing the disparate wavelength dependencies of the individual
+components.
 
 \section{Model}
 
-Our model for the optical part of the PSF is Fourier optics.  Specifically, the
-optical PSF is described by a pupil-obscuration function and wavefront function.
-(See DMTN-064 for more details).  Our primary concern for this note is the
-spatial variability of the wavefront both over the pupil plane and over the
-focal plane (i.e., the wavefront for a single exposure is a function from
-$\mathbb{R}^4$ to $\mathbb{R}$).  We break down the wavefront model of the $i$th
-exposure into three constituent components as follows:
+Our model for the optical part of a single star's PSF is Fourier optics.
+Specifically, the optical PSF is described by a pupil-obscuration function and
+wavefront function. (See DMTN-064 for more details).  Our primary concern for
+this note is the spatial variability of the optical wavefront and therefore the
+optical PSF over the field of view.  We break down the wavefront model of the
+$i$th exposure into three constituent components as follows:
 
 \begin{equation}
     W^i\left(\vec{u}; \vec{\theta}\right) =
     W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) +
     W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right) +
-    W_\mathrm{CCD}\left(\R_\phi \vec{u}; \R_\phi \vec{\theta}\right)
+    W_\mathrm{CCD}^\phi\left(\vec{u}; \vec{\theta}\right)
 \end{equation}
 
 In the above, $i$ is an index over exposures, $\vec{u}$ is a coordinate in the
 entrance pupil, $\vec{\theta}$ is the field angle (or equivalently, a location
 on the focal plane).  The coordinate system for $\vec{u}$ and $\vec{\theta}$ are
-understood to align with the altitude and azimuth axes of the telescope.
-This means that in the presence of a rotator, they are not fixed with respect to
-focal plane or CCDs themselves.
+understood to align with the altitude and azimuth axes of the telescope. Note
+that this implies that in the presence of a rotator, they are not fixed with
+respect to focal plane or CCDs themselves.
 
-The individual terms of the model are then:
+The individual terms of the model are:
 
 \begin{itemize}
 
@@ -78,24 +78,23 @@ The individual terms of the model are then:
   otherwise unperturbed optical design of the telescope.  It is independent of
   the exposure index $i$, and continuous over the pupil and field of view.
 
-  \item $W_\mathrm{CCD}\left(\R_\phi \vec{u}; \R_\phi \vec{\theta}\right)$  This
-  term is intended to model wavefront perturbations that are fixed to the CCD
-  array, such as may originate from displacements in the height of each CCD.  It
-  is continuous in the pupil, by we allow discontinuities between different CCDs
+  \item $W_\mathrm{CCD}^\phi\left(\vec{u}; \vec{\theta}\right)$  This term is
+  intended to model wavefront perturbations that are fixed to the CCD array,
+  such as may originate from displacements in the heights of each CCD. It is
+  continuous in the pupil, but we allow discontinuities between different CCDs
   across the focal plane.  Because this term is constant in focal-plane
   coordinates, but not in our alt-az aligned $\vec{u}$ and $\vec{\theta}$
-  coordinates, we are required to rotate from one system to the other.  This is
-  accomplished by the rotation operators $\R_\phi$, where $\phi$ indicates the
-  angle of rotation.  This term also does not depend on the exposure index $i$.
+  coordinates, it also depends on the rotator angle $\phi$.  Aside from the
+  implicit dependence of $\phi$ on the exposure index $i$, this term is constant
+  in time.
 
-  \item $W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right)$  This term is
-  dynamic (depends on the exposure index $i$.)  It is intended to capture the
-  effects of flexure, or temperature variations, or any other time-dependent
-  continuous perturbations to the wavefront.
+  \item $W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right)$  This dynamic
+  term is intended to capture exposure-to-exposure differences (beyond the
+  rotator angle), that may be due to flex, temperature variations, or an other
+  time-dependent continuous perturbations to the wavefront.  As such, it
+  explicitly depends on the exposure index $i$.
 
 \end{itemize}
-
-Need to break down individual terms into double zernike basis.
 
 In DMTN-064, we described how we measured individual wavefronts for a limited
 number of pairs of intra- and extra- focal images and specific locations within
@@ -103,10 +102,94 @@ the field of view.  For these "donut" images, we used a forward model that
 decomposed the delivered wavefront into a Zernike polynomial series.  I.e.:
 
 \begin{equation}
-    W^i\left(\vec{u}; \vec{\theta_\ast}\right) = \sum_{j=4}^{j_\mathrm{max}} a_j^i(\vec{\theta_\ast}) Z_j(\vec{u})
+    W^i\left(\vec{u}; \vec{\theta}_\ast\right) = \sum_{j=4}^{j_\mathrm{max}} a_j^i(\vec{\theta}_\ast) Z_j(\vec{u})
 \end{equation}
 
+It is useful to apply the same decomposition for the $\vec{u}$ dependence of the
+model terms.  I.e., for the telescope and visit terms we will write:
 
+\begin{equation}
+    W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) =
+    \sum b^\mathrm{tel}_j (\vec{\theta}) Z_j(\vec{u})
+\end{equation}
+
+\begin{equation}
+    W^i_\mathrm{visit}\left(\vec{u}; \vec{\theta}\right) =
+    \sum c^i_j (\vec{\theta}) Z_j(\vec{u})
+\end{equation}
+
+We will write the CCD term using focal plane coordinates $\vec{u}^\prime$ and
+$\vec{\theta}^\prime$ for the moment, since these are the coordinates in which
+there is no dependence on the rotator angle $\phi$:
+
+\begin{equation}
+    W^\prime_\mathrm{CCD}\left(\vec{u}^\prime; \vec{\theta}^\prime\right) =
+    \sum d_j (\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
+\end{equation}
+
+The trick is to then determine the $\vec{\theta}$ dependence.  For this, we will
+again use Zernike polynomials, forming a double zernike basis.  For the
+telescope and visit terms this is:
+
+\begin{equation}
+    W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) =
+    \sum b^\mathrm{tel}_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
+\end{equation}
+
+\begin{equation}
+    W^i_\mathrm{visit}\left(\vec{u}; \vec{\theta}\right) =
+    \sum c^i_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
+\end{equation}
+
+For the CCD term, we additionally indicate which CCD $n$ the angle
+$\vec{\theta}^\prime$ lands on (using the indicator function
+$\mathbb{1}_n(\vec{\theta}^\prime)$):
+
+\begin{equation}
+    W^\prime_\mathrm{CCD}\left(\vec{u}^\prime; \vec{\theta}^\prime\right) =
+    \sum_{njk} \mathbb{1}_n(\vec{\theta}^\prime) d_{jk} Z_k(\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
+\end{equation}
+
+To incorporate the rotator angle into the last equation, we assert
+
+\begin{equation}
+    W^\phi_\mathrm{CCD}\left(\vec{u}; \vec{\theta}\right) =
+    W^\prime_\mathrm{CCD}\left(R^\phi\vec{u}; R^\phi\vec{\theta}\right)
+\end{equation}
+
+where $R^\phi$ is the normal 2D rotation matrix for angle $\phi$.  For a given
+donut or star observation at $\vec{\theta}_\ast$ (in alt-az aligned field
+angle), this leads to
+
+\begin{equation}
+    W^\phi_\mathrm{CCD}\left(\vec{u}; \vec{\theta}_\ast\right) =
+    \sum_{njk} \mathbb{1}_n(R^\phi \vec{\theta}_\ast) d_{jk} Z_j(R^\phi \vec{u}) Z_k(R^\phi \vec{\theta}_\ast)
+\end{equation}
+
+The $Z_k(R^\phi \vec{\theta}_\ast)$ is simply a real number we can compute.  The
+$Z_j(R^\phi \vec{u})$ factor is as yet a function here, however, and we will
+find it convenient to further decompose it into a series in $Z_j{\vec{u}}$
+(getting rid of the internal $R^\phi$) using the mathematics presented in
+(Tatulli (2013) arXiv:1302.7106v1).  Namely
+
+\begin{equation}
+    Z_j(R^\phi \vec{u}) = \sum_{j^\prime} M_{j j^\prime}^\phi Z_{j^\prime}(\vec{u})
+\end{equation}
+
+where
+
+\begin{equation}
+    M_{j j^\prime}^\phi = \delta_{n n^\prime} \times \begin{cases}
+    \cos(m \phi), & m = m^\prime \\
+    \sin(m \phi), & m = -m^\prime \\
+    0 & |m| \ne |m^\prime|
+\end{cases}
+\end{equation}
+
+where $n$ ($n^\prime$) and $m$ ($m^\prime$) are the radial and azimuthal indices
+of the Zernike polynomial with Noll index $j$ ($j^\prime$).  Note that rows or
+columns of $M^\phi_{j j^\prime}$ only ever have at most 2 non-zero entries (when
+$n = n^\prime$ and $|m| = |m^\prime|$).
 
 \section{Donut fits}
 \section{In-focus fits}
