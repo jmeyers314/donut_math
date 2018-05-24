@@ -98,7 +98,7 @@ The individual terms of the model are:
 
 In DMTN-064, we described how we measured individual wavefronts for a limited
 number of pairs of intra- and extra- focal images and specific locations within
-the field of view.  For these "donut" images, we used a forward model that
+the field of view.  For these ``donut'' images, we used a forward model that
 decomposed the delivered wavefront into a Zernike polynomial series.  I.e.:
 
 \begin{equation}
@@ -110,12 +110,12 @@ model terms.  I.e., for the telescope and visit terms we will write:
 
 \begin{equation}
     W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) =
-    \sum b^\mathrm{tel}_j (\vec{\theta}) Z_j(\vec{u})
+    \sum_j b^\mathrm{tel}_j (\vec{\theta}) Z_j(\vec{u})
 \end{equation}
 
 \begin{equation}
     W^i_\mathrm{visit}\left(\vec{u}; \vec{\theta}\right) =
-    \sum c^i_j (\vec{\theta}) Z_j(\vec{u})
+    \sum_j c^i_j (\vec{\theta}) Z_j(\vec{u})
 \end{equation}
 
 We will write the CCD term using focal plane coordinates $\vec{u}^\prime$ and
@@ -124,7 +124,7 @@ there is no dependence on the rotator angle $\phi$:
 
 \begin{equation}
     W^\prime_\mathrm{CCD}\left(\vec{u}^\prime; \vec{\theta}^\prime\right) =
-    \sum d_j (\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
+    \sum_j d_j (\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
 \end{equation}
 
 The trick is to then determine the $\vec{\theta}$ dependence.  For this, we will
@@ -133,16 +133,16 @@ telescope and visit terms this is:
 
 \begin{equation}
     W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) =
-    \sum b^\mathrm{tel}_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
+    \sum_{jk} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
 \end{equation}
 
 \begin{equation}
     W^i_\mathrm{visit}\left(\vec{u}; \vec{\theta}\right) =
-    \sum c^i_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
+    \sum_{jk} c^i_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
 \end{equation}
 
-For the CCD term, we additionally indicate which CCD $n$ the angle
-$\vec{\theta}^\prime$ lands on (using the indicator function
+For the CCD term, we additionally indicate which CCD $n$ the field angle
+$\vec{\theta}^\prime$ projects to (using the indicator function
 $\mathbb{1}_n(\vec{\theta}^\prime)$):
 
 \begin{equation}
@@ -163,7 +163,7 @@ angle), this leads to
 
 \begin{equation}
     W^\phi_\mathrm{CCD}\left(\vec{u}; \vec{\theta}_\ast\right) =
-    \sum_{njk} \mathbb{1}_n(R^\phi \vec{\theta}_\ast) d_{jk} Z_j(R^\phi \vec{u}) Z_k(R^\phi \vec{\theta}_\ast)
+    \sum_{njk} \mathbb{1}_n(R^\phi \vec{\theta}_\ast) d_{njk} Z_j(R^\phi \vec{u}) Z_k(R^\phi \vec{\theta}_\ast)
 \end{equation}
 
 The $Z_k(R^\phi \vec{\theta}_\ast)$ is simply a real number we can compute.  The
@@ -189,9 +189,60 @@ where
 where $n$ ($n^\prime$) and $m$ ($m^\prime$) are the radial and azimuthal indices
 of the Zernike polynomial with Noll index $j$ ($j^\prime$).  Note that rows or
 columns of $M^\phi_{j j^\prime}$ only ever have at most 2 non-zero entries (when
-$n = n^\prime$ and $|m| = |m^\prime|$).
+$n = n^\prime$ and $|m| = |m^\prime|$).  With this decomposition, we obtain
+for each of $W_\mathrm{tel}$, $W_\mathrm{visit}$, and $W_\mathrm{CCD}$ a series
+in pupil Zernikes $Z_j(\vec{u})$.
 
 \section{Donut fits}
+
+To determine the unknown coefficients $b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and
+$d_{njk}$ of our model, we minimize the least squares residual over the
+wavefronts:
+
+\begin{equation}
+\begin{align}
+    \mathrm{loss}
+    &\propto \sum_{\ast}
+    \int \dif{\vec{u}} \left\{\sum_j a_j^\ast Z_j(\vec{u})
+    - \sum_{jk} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
+    - \sum_{ijk} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
+    - \sum_{injk} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
+    \right\}^2 \\
+    &\propto \sum_{\ast}
+    \int \dif{\vec{u}} \left\{\sum_j\left(a_j^\ast
+    - \sum_{k} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast)
+    - \sum_{ik} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast)
+    - \sum_{ink} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast)
+    \right) Z_j(\vec{u})\right\}^2 \\
+\end{align}
+\end{equation}
+
+Expanding the $\left\{\cdot\right\}^2$ above, we can perform the integral over
+$\dif{\vec{u}}$ by taking advantage of the orthogonality of Zernike polynomials:
+
+\begin{equation}
+    \int Z_j(\vec{u}) Z_{j^\prime}(\vec{u}) \dif \vec{u} = \pi \delta_{j j^\prime}
+\end{equation}
+
+Essentially, only the squares of the terms being indexed by $j$ survive, and all
+the cross terms vanish.  This leaves us with
+
+\begin{equation}
+    \mathrm{loss} \propto \sum_j \sum_{\ast}
+    \left\{a_j^\ast
+    - \sum_{k} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast)
+    - \sum_{ik} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast)
+    - \sum_{ink} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast)
+    \right\}^2
+    \label{eqn:loss}
+\end{equation}
+
+which is a sum of positive terms, and can therefore be minimized one value of
+$j$ at a time.  And although Eq. \ref{eqn:loss} may look complicated, since the
+terms corresponding to the model are linear in each of the unknown variables of
+the model ($b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and $d_{njk}$), we can solve it
+via standard linear algebra routines.
+
 \section{In-focus fits}
 \section{Future}
 
