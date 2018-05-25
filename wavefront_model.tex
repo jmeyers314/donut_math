@@ -59,15 +59,16 @@ $i$th exposure into three constituent components as follows:
     W^i\left(\vec{u}; \vec{\theta}\right) =
     W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) +
     W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right) +
-    W_\mathrm{CCD}^\phi\left(\vec{u}; \vec{\theta}\right)
+    W_\mathrm{CCD}^{\phi_i}\left(\vec{u}; \vec{\theta}\right)
 \end{equation}
 
-In the above, $i$ is an index over exposures, $\vec{u}$ is a coordinate in the
-entrance pupil, $\vec{\theta}$ is the field angle (or equivalently, a location
-on the focal plane).  The coordinate system for $\vec{u}$ and $\vec{\theta}$ are
-understood to align with the altitude and azimuth axes of the telescope. Note
-that this implies that in the presence of a rotator, they are not fixed with
-respect to focal plane or CCDs themselves.
+In the above, $i$ is an index over exposures, $\phi_i$ is the rotator angle for
+the $i$th exposure, $\vec{u}$ is a coordinate in the entrance pupil,
+$\vec{\theta}$ is the field angle (or equivalently, a location on the focal
+plane).  The coordinate system for $\vec{u}$ and $\vec{\theta}$ are understood
+to align with the altitude and azimuth axes of the telescope. Note that this
+implies that in the presence of a rotator, they are not fixed with respect to
+focal plane or CCDs themselves.
 
 The individual terms of the model are:
 
@@ -78,21 +79,20 @@ The individual terms of the model are:
   otherwise unperturbed optical design of the telescope.  It is independent of
   the exposure index $i$, and continuous over the pupil and field of view.
 
-  \item $W_\mathrm{CCD}^\phi\left(\vec{u}; \vec{\theta}\right)$  This term is
-  intended to model wavefront perturbations that are fixed to the CCD array,
+  \item $W_\mathrm{CCD}^{\phi_i}\left(\vec{u}; \vec{\theta}\right)$  This term
+  is intended to model wavefront perturbations that are fixed to the CCD array,
   such as may originate from displacements in the heights of each CCD. It is
   continuous in the pupil, but we allow discontinuities between different CCDs
   across the focal plane.  Because this term is constant in focal-plane
   coordinates, but not in our alt-az aligned $\vec{u}$ and $\vec{\theta}$
-  coordinates, it also depends on the rotator angle $\phi$.  Aside from the
-  implicit dependence of $\phi$ on the exposure index $i$, this term is constant
-  in time.
+  coordinates, it also depends on the rotator angle $\phi_i$.  Aside from the
+  dependence on $\phi$, this term is constant in time.
 
   \item $W_\mathrm{visit}^i\left(\vec{u}; \vec{\theta}\right)$  This dynamic
   term is intended to capture exposure-to-exposure differences (beyond the
-  rotator angle), that may be due to flex, temperature variations, or an other
-  time-dependent continuous perturbations to the wavefront.  As such, it
-  explicitly depends on the exposure index $i$.
+  rotator angle), that may be due to flexure, temperature variations, or any
+  other time-dependent continuous perturbation to the wavefront.  It explicitly
+  depends on the exposure index $i$.
 
 \end{itemize}
 
@@ -104,6 +104,17 @@ decomposed the delivered wavefront into a Zernike polynomial series.  I.e.:
 \begin{equation}
     W^i\left(\vec{u}; \vec{\theta}_\ast\right) = \sum_{j=4}^{j_\mathrm{max}} a_j^i(\vec{\theta}_\ast) Z_j(\vec{u})
 \end{equation}
+
+In Figure \ref{fig:a69016} we show the field-of-view dependence of such fits to
+one exposure.
+
+\begin{figure}
+    \includegraphics{a69016.png}
+
+    \caption{}
+
+    \label{fig:a69016}
+\end{figure}
 
 It is useful to apply the same decomposition for the $\vec{u}$ dependence of the
 model terms.  I.e., for the telescope and visit terms we will write:
@@ -119,21 +130,23 @@ model terms.  I.e., for the telescope and visit terms we will write:
 \end{equation}
 
 We will write the CCD term using focal plane coordinates $\vec{u}^\prime$ and
-$\vec{\theta}^\prime$ for the moment, since these are the coordinates in which
-there is no dependence on the rotator angle $\phi$:
+$\vec{\theta}^\prime$ (instead of alt-az aligned coordinates), since these are
+the coordinates in which there is no dependence on the rotator angle $\phi$, and
+hence no dependence on the exposure index $i$:
 
 \begin{equation}
     W^\prime_\mathrm{CCD}\left(\vec{u}^\prime; \vec{\theta}^\prime\right) =
-    \sum_j d_j (\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
+    \sum_{j^\prime} d_{j^\prime} (\vec{\theta}^\prime) Z_{j^\prime}(\vec{u}^\prime)
 \end{equation}
 
-The trick is to then determine the $\vec{\theta}$ dependence.  For this, we will
-again use Zernike polynomials, forming a double zernike basis.  For the
-telescope and visit terms this is:
+The trick now is to concretely model the $\vec{\theta}$ dependence which we left
+purely abstract above.  For this, we will again use Zernike polynomials, forming
+a double zernike basis.  For the telescope and visit terms this becomes:
 
 \begin{equation}
     W_\mathrm{tel}\left(\vec{u}; \vec{\theta}\right) =
     \sum_{jk} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}) Z_j(\vec{u})
+    \label{eqn:Wtel}
 \end{equation}
 
 \begin{equation}
@@ -147,7 +160,7 @@ $\mathbb{1}_n(\vec{\theta}^\prime)$):
 
 \begin{equation}
     W^\prime_\mathrm{CCD}\left(\vec{u}^\prime; \vec{\theta}^\prime\right) =
-    \sum_{njk} \mathbb{1}_n(\vec{\theta}^\prime) d_{jk} Z_k(\vec{\theta}^\prime) Z_j(\vec{u}^\prime)
+    \sum_{n j^\prime k} d_{n j^\prime k} \mathbb{1}_n(\vec{\theta}^\prime) Z_k(\vec{\theta}^\prime) Z_{j^\prime}(\vec{u}^\prime)
 \end{equation}
 
 To incorporate the rotator angle into the last equation, we assert
@@ -163,17 +176,17 @@ angle), this leads to
 
 \begin{equation}
     W^\phi_\mathrm{CCD}\left(\vec{u}; \vec{\theta}_\ast\right) =
-    \sum_{njk} \mathbb{1}_n(R^\phi \vec{\theta}_\ast) d_{njk} Z_j(R^\phi \vec{u}) Z_k(R^\phi \vec{\theta}_\ast)
+    \sum_{n j^\prime k} d_{n j^\prime k} \mathbb{1}_n(R^\phi \vec{\theta}_\ast) Z_{j^\prime}(R^\phi \vec{u}) Z_k(R^\phi \vec{\theta}_\ast)
 \end{equation}
 
 The $Z_k(R^\phi \vec{\theta}_\ast)$ is simply a real number we can compute.  The
-$Z_j(R^\phi \vec{u})$ factor is as yet a function here, however, and we will
-find it convenient to further decompose it into a series in $Z_j{\vec{u}}$
-(getting rid of the internal $R^\phi$) using the mathematics presented in
-(Tatulli (2013) arXiv:1302.7106v1).  Namely
+$Z_{j^\prime}(R^\phi \vec{u})$ factor is as yet a function here. We will find it
+convenient to further decompose it into a series in $Z_j({\vec{u}})$
+(eliminating the $R^\phi$) using the mathematics presented in (Tatulli (2013)
+arXiv:1302.7106v1).  Namely
 
 \begin{equation}
-    Z_j(R^\phi \vec{u}) = \sum_{j^\prime} M_{j j^\prime}^\phi Z_{j^\prime}(\vec{u})
+    Z_{j^\prime}(R^\phi \vec{u}) = \sum_{j} M_{j j^\prime}^\phi Z_{j}(\vec{u})
 \end{equation}
 
 where
@@ -189,33 +202,39 @@ where
 where $n$ ($n^\prime$) and $m$ ($m^\prime$) are the radial and azimuthal indices
 of the Zernike polynomial with Noll index $j$ ($j^\prime$).  Note that rows or
 columns of $M^\phi_{j j^\prime}$ only ever have at most 2 non-zero entries (when
-$n = n^\prime$ and $|m| = |m^\prime|$).  With this decomposition, we obtain
+$n = n^\prime$ and $m = \pm m^\prime$).  With this decomposition, we obtain
 for each of $W_\mathrm{tel}$, $W_\mathrm{visit}$, and $W_\mathrm{CCD}$ a series
-in pupil Zernikes $Z_j(\vec{u})$.
+in alt-az aligned pupil Zernikes $Z_j(\vec{u})$.
 
 \section{Donut fits}
 
+\subsection{Formalism}
+
 To determine the unknown coefficients $b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and
-$d_{njk}$ of our model, we minimize the least squares residual over the
+$d_{n j^\prime k}$ of our model from a set of pupil Zernike measurements
+$\left\{a^*_j\right\}$, we minimize the least squares residual over the
 wavefronts:
 
 \begin{equation}
 \begin{align}
-    \mathrm{loss}
-    &\propto \sum_{\ast}
+    &\sum_{\ast} \int \dif{\vec{u}} \left\{\mathrm{data} - \mathrm{model}\right\}^2 \\
+    &\sum_{\ast}
     \int \dif{\vec{u}} \left\{\sum_j a_j^\ast Z_j(\vec{u})
     - \sum_{jk} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
     - \sum_{ijk} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
-    - \sum_{injk} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
+    - \sum_{injk} \mathbb{1}_n(R^{\phi_i} \vec{\theta}_\ast) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j^\prime k} M^{\phi_i}_{j j^\prime} Z_k(R^{\phi_i} \vec{\theta}_\ast) Z_j(\vec{u})
     \right\}^2 \\
     &\propto \sum_{\ast}
     \int \dif{\vec{u}} \left\{\sum_j\left(a_j^\ast
     - \sum_{k} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast)
     - \sum_{ik} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast)
-    - \sum_{ink} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast)
+    - \sum_{ink} \mathbb{1}_n(R^{\phi_i} \vec{\theta}_\ast) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j^\prime k} M^{\phi_i}_{j j^\prime} Z_k(R^{\phi_i} \vec{\theta}_\ast)
     \right) Z_j(\vec{u})\right\}^2 \\
 \end{align}
 \end{equation}
+
+We use the notation $\mathbb{1}_i(\ast)$ to indicate if a given star was
+observed on the $i$th exposure.
 
 Expanding the $\left\{\cdot\right\}^2$ above, we can perform the integral over
 $\dif{\vec{u}}$ by taking advantage of the orthogonality of Zernike polynomials:
@@ -228,22 +247,195 @@ Essentially, only the squares of the terms being indexed by $j$ survive, and all
 the cross terms vanish.  This leaves us with
 
 \begin{equation}
-    \mathrm{loss} \propto \sum_j \sum_{\ast}
+    \sum_j \sum_{\ast}
     \left\{a_j^\ast
     - \sum_{k} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast)
     - \sum_{ik} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast)
-    - \sum_{ink} \mathbb{1}_n(R^{\phi_i}) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j k} M^{\phi_i}_{j j^\prime} Z_k(\vec{\theta}_\ast)
+    - \sum_{ink} \mathbb{1}_n(R^{\phi_i} \vec{\theta}_\ast) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j^\prime k} M^{\phi_i}_{j j^\prime} Z_k(R^{\phi_i} \vec{\theta}_\ast)
     \right\}^2
     \label{eqn:loss}
 \end{equation}
 
-which is a sum of positive terms, and can therefore be minimized one value of
-$j$ at a time.  And although Eq. \ref{eqn:loss} may look complicated, since the
-terms corresponding to the model are linear in each of the unknown variables of
-the model ($b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and $d_{njk}$), we can solve it
-via standard linear algebra routines.
+(with the square now occuring \textit{inside} the summation over $j$).
 
-\section{In-focus fits}
-\section{Future}
+Although Eq. \ref{eqn:loss} may look complicated, since the terms corresponding
+to the model are linear in each of the unknown variables of the model
+($b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and $d_{njk}$), we can solve it via standard
+linear algebra routines.  Figuratively, we are looking for the least squares
+solution to:
+
+\begin{equation}
+  \[
+  \begin{bmatrix}
+    \dots & \dots & \dots \\
+    \dots & \mathrm{geometry} & \dots \\
+    \dots & \dots & \dots
+  \end{bmatrix}
+  \cdot
+  \begin{bmatrix}
+    \mathrm{b's} \\
+    \dots \\
+    \mathrm{c's} \\
+    \dots \\
+    \mathrm{d's} \\
+    \dots
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \dots \\
+    \mathrm{a's} \\
+    \dots
+  \end{bmatrix}
+  \]
+  \label{eqn:matrix}
+\end{equation}
+
+Also note that the $\{b^\mathrm{tel}_{jk}\}$, and $\{c^i_{jk}\}$ unknown
+coefficients only occur in terms that include $a_j^\ast$, i.e., they never occur
+in a term that includes $a_{j^\prime}^\ast$ with $j \ne j^\prime$.  Similarly,
+the unknown $\{d_{n j^\prime k}\}$ coefficients only occur in terms with at most
+one of two different values of $a_j^\ast$, which follows from our earlier
+comment that $M^\phi_{j j^\prime}$ only ever has at most 2 non-zero entries per
+row or column.  These facts enable us to find the minimum of Eq. \ref{eqn:loss}
+in blocks of either 1 or 2 $j$ values at a time.
+
+\subsection{Configuration}
+
+In the above formalism, we never explicitly mentioned the upper indices of the
+various summations.  In some cases, these may be fairly obvious, like the upper
+index over $i$ is the number of exposure pairs being analyzed, and the upper
+index over $n$ is the number of CCDs being analyzed.  In other cases, we
+consciously omitted the indices because they are part of the model design --
+they're flexible.  For example, the sum over $j$ and $k$ in $W_\mathrm{tel}$
+(Eq. \ref{eqn:Wtel}) indicates how much complexity in the pupil (the $j$ index)
+and across the field of view (the $k$ index) we want to allow in the
+constant-continuous part of the model.  Our intuition for this term from
+observing donut fits and from modeling the HSC optics is to allow a large amount
+of freedom in the field-of-view dependence of $W_\mathrm{tel}$, and set
+$k^\mathrm{max}_\mathrm{tel} = 55$, which is an arbitrary 10th order 2D
+polynomial.  The visit term should probably have less freedom than this, as we
+expect flexure and temperature fluctuations to induce mostly slowly varying
+changes to the wavefront.  We choose $k^\mathrm{max}_{visit} = 10$, which is a
+3rd degree polynomial.  For $W_CCD$, we only use $k^\mathrm{max}_{CCD} = 1$,
+indicating that each CCD only has freedom to change the wavefront by a constant
+amount over the CCD.  For each of these terms, we also choose $j^\mathrm{max} =
+21$, simply because that's the largest value of $j$ for which we made donut fits
+$a_j$.
+
+With the above index upper limits, and using 10 visits and 104 CCDs, our
+complete model has 4230 parameters to fit.  We have 20984 donut measurements to
+constrain the model, or 377712 individual $a_j^\ast$ Zernike measurements.
+
+Before we can build the "geometry" matrix of Eqn \ref{eqn:matrix} and fit the
+model, we must address one final point, which is that even with many times more
+data points than parameters, our model currently has too much freedom to have a
+unique best fit solution -- it's degenerate.  For example, raising the value of
+$b^\mathrm{tel}_{4,1}$ is degenerate with both lowering the values of each of
+$c^i_{4,1}$, or lowering the values of each of $d_{n 4 1}$.  To fix this, we
+add the constraint functions
+
+\begin{equation}
+  \sum_i c^i_{jk} = 0
+\end{equation}
+
+and
+
+\begin{equation}
+  \sum_{n} d_{n j^\prime k} = 0
+\end{equation}
+
+which select a unique solution from the otherwise infinite set of degenerate
+solutions.  The above equations are simply additional rows in the "geometry"
+matrix and corresponding 0's added to the "a's" matrix of Eqn. \ref{eqn:matrix}.
+
+In figure \ref{fig:design4}, we show the design matrix for the $j=4$ block of
+Eqn. \ref{eqn:loss}.  Each row corresponds to an individual donut measurement
+$a^*_4$.  The columns of this design matrix show 3 broad distinct regions, which
+correspond from left-to-right with $W_\mathrm{tel}$, $W_\mathrm{CCD}$, and
+$W_\mathrm{visit}$.  Within the $W_\mathrm{CCD}$ region, we can see further
+subdivisions that correspond to individual CCDs, and within the
+$W_mathrm{visit}$ section, we can see individual visits.  In short, the
+structure of the design matrix is that every donut constraints $W_\mathrm{tel}$,
+constrains the $W_\mathrm{CCD}$ parameters corresponding to the 1 CCD that it
+lands on in the 1 visit, and constrains $W_\mathrm{visit}$ parameters that
+correspond to its particular visit.
+
+\begin{figure}
+    \includegraphics{design4.png}
+
+    \caption{}
+
+    \label{fig:design4}
+\end{figure}
+
+In Figure \ref{fig:design56}, we show the design matrix for the combined $j=5$
+and $j=6$ block of Eqn. \ref{eqn:loss}.  The same subblocks as in Figure
+\ref{fig:design4} are apparent, but doubled.  The doubling is a consequence of
+the mixing of $Z_5$ and $Z_6$ under a coordinate system rotation, as discussed
+earlier.
+
+\begin{figure}
+    \includegraphics{design56.png}
+
+    \caption{}
+
+    \label{fig:design56}
+\end{figure}
+
+\subsection{Fit}
+
+Figures \ref{fig:Wtel}, \ref{fig:WCCD}, and \ref{fig:Wvisit69016} show the fit
+results for
+
+\begin{figure}
+    \includegraphics{Wtel.png}
+
+    \caption{}
+
+    \label{fig:Wtel}
+\end{figure}
+
+\begin{figure}
+    \includegraphics{WCCD.png}
+
+    \caption{}
+
+    \label{fig:WCCD}
+\end{figure}
+
+\begin{figure}
+    \includegraphics{Wvisit69016.png}
+
+    \caption{}
+
+    \label{fig:Wvisit69016}
+\end{figure}
+
+\begin{figure}
+    \includegraphics{W69016.png}
+
+    \caption{}
+
+    \label{fig:W69016}
+\end{figure}
+
+\begin{figure}
+    \includegraphics{Wresid69016.png}
+
+    \caption{}
+
+    \label{fig:Wresid69016}
+\end{figure}
+
+\section{In-focus fits} \section{Future}
+
+\section{TODO}
+
+\begin{itemize}
+  \item Add data Z pyramid for 69016 somewhere relatively early.
+  \item Add quick discussion of in-focus PCA optimization.
+  \item Add in-focus fit results.
+  \item Add todo items.
+\end{itemize}
 
 \end{document}
