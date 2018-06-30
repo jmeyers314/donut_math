@@ -4,7 +4,7 @@
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 %\usepackage{color}
 \usepackage{graphicx}
-\usepackage{amsmath}
+\usepackage[fleqn]{amsmath}
 \usepackage{amsfonts}
 \usepackage{mathabx}
 \usepackage{commath}
@@ -109,9 +109,9 @@ In Figure \ref{fig:a69016} we show the field-of-view dependence of such fits to
 one exposure.
 
 \begin{figure}
-    \includegraphics{a69016.png}
+    \includegraphics[width=\textwidth]{a69016.png}
 
-    \caption{}
+    \caption{Zernike coefficient fits for exposure pair 69016/69018.}
 
     \label{fig:a69016}
 \end{figure}
@@ -212,13 +212,14 @@ in alt-az aligned pupil Zernikes $Z_j(\vec{u})$.
 
 To determine the unknown coefficients $b^\mathrm{tel}_{jk}$, $c^i_{jk}$, and
 $d_{n j^\prime k}$ of our model from a set of pupil Zernike measurements
-$\left\{a^*_j\right\}$, we minimize the least squares residual over the
-wavefronts:
+$\left\{a^*_j\right\}$, we minimize the sum of the least squares residuals $R$
+over all of the wavefront measurements:
 
 \begin{equation}
-\begin{align}
-    &\sum_{\ast} \int \dif{\vec{u}} \left\{\mathrm{data} - \mathrm{model}\right\}^2 \\
-    &\sum_{\ast}
+\hspace*{-1cm}
+\begin{aligned}
+    R\, &\propto \sum_{\ast} \int \dif{\vec{u}} \left\{\mathrm{data} - \mathrm{model}\right\}^2 \\
+    &\propto \sum_{\ast}
     \int \dif{\vec{u}} \left\{\sum_j a_j^\ast Z_j(\vec{u})
     - \sum_{jk} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
     - \sum_{ijk} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast) Z_j(\vec{u})
@@ -229,8 +230,8 @@ wavefronts:
     - \sum_{k} b^\mathrm{tel}_{jk} Z_k(\vec{\theta}_\ast)
     - \sum_{ik} \mathbb{1}_i(\ast) c^i_{jk} Z_k(\vec{\theta}_\ast)
     - \sum_{ink} \mathbb{1}_n(R^{\phi_i} \vec{\theta}_\ast) \mathbb{1}_i(\ast) \sum_{j^\prime} d_{n j^\prime k} M^{\phi_i}_{j j^\prime} Z_k(R^{\phi_i} \vec{\theta}_\ast)
-    \right) Z_j(\vec{u})\right\}^2 \\
-\end{align}
+    \right) Z_j(\vec{u})\right\}^2
+\end{aligned}
 \end{equation}
 
 We use the notation $\mathbb{1}_i(\ast)$ to indicate if a given star was
@@ -265,7 +266,6 @@ linear algebra routines.  Figuratively, we are looking for the least squares
 solution to:
 
 \begin{equation}
-  \[
   \begin{bmatrix}
     \dots & \dots & \dots \\
     \dots & \mathrm{geometry} & \dots \\
@@ -286,7 +286,6 @@ solution to:
     \mathrm{a's} \\
     \dots
   \end{bmatrix}
-  \]
   \label{eqn:matrix}
 \end{equation}
 
@@ -316,23 +315,23 @@ $k^\mathrm{max}_\mathrm{tel} = 55$, which is an arbitrary 10th order 2D
 polynomial.  The visit term should probably have less freedom than this, as we
 expect flexure and temperature fluctuations to induce mostly slowly varying
 changes to the wavefront.  We choose $k^\mathrm{max}_{visit} = 10$, which is a
-3rd degree polynomial.  For $W_CCD$, we only use $k^\mathrm{max}_{CCD} = 1$,
+3rd degree polynomial.  For $W_{CCD}$, we only use $k^\mathrm{max}_{CCD} = 1$,
 indicating that each CCD only has freedom to change the wavefront by a constant
 amount over the CCD.  For each of these terms, we also choose $j^\mathrm{max} =
 21$, simply because that's the largest value of $j$ for which we made donut fits
 $a_j$.
 
 With the above index upper limits, and using 10 visits and 104 CCDs, our
-complete model has 4230 parameters to fit.  We have 20984 donut measurements to
-constrain the model, or 377712 individual $a_j^\ast$ Zernike measurements.
+complete model has 4230 parameters to fit.  We have 20,984 donuts images to
+constrain the model, or 377,712 individual $a_j^\ast$ Zernike measurements.
 
 Before we can build the "geometry" matrix of Eqn \ref{eqn:matrix} and fit the
 model, we must address one final point, which is that even with many times more
 data points than parameters, our model currently has too much freedom to have a
-unique best fit solution -- it's degenerate.  For example, raising the value of
-$b^\mathrm{tel}_{4,1}$ is degenerate with both lowering the values of each of
-$c^i_{4,1}$, or lowering the values of each of $d_{n 4 1}$.  To fix this, we
-add the constraint functions
+unique best fit solution -- it's degenerate.  For example, increasing the value
+of $b^\mathrm{tel}_{4,1}$ is degenerate with either decreasing the values of
+each of $c^i_{4,1}$, or decreasing the values of each of $d_{n 4 1}$.  To fix
+this, we add the constraint functions
 
 \begin{equation}
   \sum_i c^i_{jk} = 0
@@ -353,7 +352,7 @@ Eqn. \ref{eqn:loss}.  Each row corresponds to an individual donut measurement
 $a^*_4$.  The columns of this design matrix show 3 broad distinct regions, which
 correspond from left-to-right with $W_\mathrm{tel}$, $W_\mathrm{CCD}$, and
 $W_\mathrm{visit}$.  Within the $W_\mathrm{CCD}$ region, we can see further
-subdivisions that correspond to individual CCDs, and within the
+subdivisions that correspond to individual CCDs and visits, and within the
 $W_mathrm{visit}$ section, we can see individual visits.  In short, the
 structure of the design matrix is that every donut constraints $W_\mathrm{tel}$,
 constrains the $W_\mathrm{CCD}$ parameters corresponding to the 1 CCD that it
@@ -361,9 +360,9 @@ lands on in the 1 visit, and constrains $W_\mathrm{visit}$ parameters that
 correspond to its particular visit.
 
 \begin{figure}
-    \includegraphics{design4.png}
+    \includegraphics[width=\textwidth]{design4.png}
 
-    \caption{}
+    \caption{Design matrix for $Z_4$ showing sparse structure.}
 
     \label{fig:design4}
 \end{figure}
@@ -375,67 +374,173 @@ the mixing of $Z_5$ and $Z_6$ under a coordinate system rotation, as discussed
 earlier.
 
 \begin{figure}
-    \includegraphics{design56.png}
+    \includegraphics[width=\textwidth]{design56.png}
 
-    \caption{}
+    \caption{Design matrix for $Z_5$ and $Z_6$ showing how these terms mix
+    together.}
 
     \label{fig:design56}
 \end{figure}
 
 \subsection{Fit}
 
-Figures \ref{fig:Wtel}, \ref{fig:WCCD}, and \ref{fig:Wvisit69016} show the fit
-results for
+Figures \ref{fig:Wtel}, \ref{fig:WCCD}, and \ref{fig:Wvisit69016} show the
+results of fitting the model for $W_\mathrm{tel}$, $W_\mathrm{CCD}$, and for one
+particular visit (69016) of $W_\mathrm{visit}$.
+
+$W_\mathrm{tel}$ broadly shows the kinds of patterns that we expect for the
+telescope design.  For instance, Zernike terms that vary like $\cos(m \theta)$
+in the pupil azimuthal angle $\theta$ vary like $\cos(m \phi)$ in the field
+azimuthal angle $\phi$, as must be the case for a circularly symmetric optical
+system.  Higher order pupil Zernikes show less amplitude than lower order.
+
+In $W_\mathrm{CCD}$, discontinuities between CCDs are clearly visible (although
+note that the amplitudes are pretty small compared to the design amplitudes).
+It's worth pointing out that for the circularly symmetric terms (Z4 and Z11),
+we expect some degeneracy between $W_\mathrm{tel}$ and $W_\mathrm{CCD}$.  In the
+other terms, this degeneracy can largely be broken by simultaneously fitting
+exposures taken at different rotator angles.
 
 \begin{figure}
-    \includegraphics{Wtel.png}
+    \includegraphics[width=\textwidth]{Wtel.png}
 
-    \caption{}
+    \caption{$W_\mathrm{tel}$}
 
     \label{fig:Wtel}
 \end{figure}
 
 \begin{figure}
-    \includegraphics{WCCD.png}
+    \includegraphics[width=\textwidth]{WCCD.png}
 
-    \caption{}
+    \caption{$W_\mathrm{CCD}$  Note that the coordinate axes are along the rows
+    and columns of the focal plane here.  (And therefore this wavefront figure
+    is not aligned with the others in this note.) }
 
     \label{fig:WCCD}
 \end{figure}
 
 \begin{figure}
-    \includegraphics{Wvisit69016.png}
+    \includegraphics[width=\textwidth]{Wvisit69016.png}
 
-    \caption{}
+    \caption{$W_\mathrm{visit}$ for exposure pair 69016/69018.}
 
     \label{fig:Wvisit69016}
 \end{figure}
 
-\begin{figure}
-    \includegraphics{W69016.png}
+In Figures \ref{fig:W69016} and \ref{fig:Wresid69016} we see the complete model
+and the residual.  From the residual plot, it's clear that we've captured most
+of the variation in the data.
 
-    \caption{}
+\begin{figure}
+    \includegraphics[width=\textwidth]{W69016.png}
+
+    \caption{The complete model for exposure pair 69016/69018.  Note that this
+    is \emph{slightly} different than the straight sum of the data in Figures
+    \ref{Wtel}, \ref{WCCD}, and \ref{Wvisit69016}, since the $W_\mathrm{CCD}$
+    term has been rotated to the particular rotator angle appropriate for this
+    exposure pair.}
 
     \label{fig:W69016}
 \end{figure}
 
 \begin{figure}
-    \includegraphics{Wresid69016.png}
+    \includegraphics[width=\textwidth]{Wresid69016.png}
 
-    \caption{}
+    \caption{Residual for exposure pair 69016/69018.  I.e., data (Figure
+    \ref{fig:a69016}) minus model (Figure \ref{fig:W69016}).  Aside from
+    individual point outliers, there is some barely visible structure in the
+    centers of the trefoil (Z9 and Z10) and second astigmatism (Z12 and Z13)
+    panels.}
 
     \label{fig:Wresid69016}
 \end{figure}
 
-\section{In-focus fits} \section{Future}
+\section{In-focus fits}
 
-\section{TODO}
+To apply our model to in-focus exposures we A) Fix the values of
+$W_\mathrm{tel}$ and $W_\mathrm{CCD}$ found in the preceding analysis (i.e., the
+values $b^\mathrm{tel}_{jk}$ and $d_{n j^\prime k}$), and B) apply a
+dimensionality reduction to $W_\mathrm{visit}$ (i.e., the values of $c^i_{jk}$).
+For B), we specifically use principle component analysis to derive eigen-visits
+from the 10 available $W_\mathrm{visit}$ data that we have.  We find that
+keeping 3, 4, 5 eigen-visits captures 75\%, 84\%, and 89\% of the variance
+amongst all $W_\mathrm{visit}$ terms, respectively.  For the subsequent analysis,
+we use 4 eigen-visits.
 
-\begin{itemize}
-  \item Add data Z pyramid for 69016 somewhere relatively early.
-  \item Add quick discussion of in-focus PCA optimization.
-  \item Add in-focus fit results.
-  \item Add todo items.
-\end{itemize}
+With the 4 eigen-visits and fixed values of $W_\mathrm{tel}$ and
+$W_\mathrm{CCD}$, we can construct a model for the optical part of the PSF
+across an entire field of view that only depends on 4 numbers, which are
+coefficients of the eigen-visits.
+
+To compare this model to in-focus data, however, we also need to account for the
+sensor and atmospheric part of the in-focus PSF (otherwise we'd be comparing
+relatively small optics-only PSFs to relatively large optics+atmosphere+sensor
+PSFs).  Since we are principally interested in the optics part of the PSF here,
+we take a fairly simple model for the atmospheric+sensor PSF, which is a single
+elliptical Kolmogorov profile.  This model has three parameters: 1 for the
+overall size and 2 for the ellipticity.  Our intention is that this model will
+grossly capture the effects of not only the atmosphere, but also the sensors
+(charge diffusion) and other PSF contributions not part of the optics, for
+example wind shake or tracking errors during the exposure.
+
+The optics + atmoshere + sensor model then contains 7 parameters to optimize for
+each exposure: 4 controlling relative amplitudes of the dominant eigen-visits,
+and 3 controlling the atmospheric+sensors+etc PSF.
+
+We test this model on a few in-focus exposures.  To fit the model to the data,
+we randomly select 100 stars over the field of view and reduce them to their
+second moments as measured by HSM.  We do the same for the PSFs predicted by the
+model.  We then minimize the sum of the squares of the second moments of all 100
+stars.
+
+The results of this in-focus PSF fitting procedure for three different exposures
+are presented in Figures \ref{fig:size}, \ref{fig:e1}, and \ref{fig:e2}.  The
+PSF sizes and e1 components are relatively well fit by the model.  The e2
+components are not particularly well fit; in fact, it appears that there may be
+a minus sign error somewhere that is affecting the e2 results.  Overall though,
+this approach seems promising in that it can explain are significant part of the
+large-field variation of PSF parameters using a very small number of parameters.
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{r_69008.png}
+    \includegraphics[width=\textwidth]{r_69014.png}
+    \includegraphics[width=\textwidth]{r_69026.png}
+
+    \caption{PSF sizes.  Different rows correspond to different exposures.  The
+    first column are the HSM-measured PSF sizes in the data.  The middle column
+    are the best-fit model predictions.  The right column shows the residuals.}
+
+    \label{fig:size}
+\end{figure}
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{e1_69008.png}
+    \includegraphics[width=\textwidth]{e1_69014.png}
+    \includegraphics[width=\textwidth]{e1_69026.png}
+
+    \caption{PSF e1 component.  Rows and columns are as in \ref{fig:size}}
+
+    \label{fig:e1}
+\end{figure}
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{e2_69008.png}
+    \includegraphics[width=\textwidth]{e2_69014.png}
+    \includegraphics[width=\textwidth]{e2_69026.png}
+
+    \caption{PSF e2 component.  Rows and columns are as in \ref{fig:size}}
+
+    \label{fig:e2}
+\end{figure}
+
+\begin{figure}
+    \includegraphics[width=\textwidth]{w_69008.png}
+    \includegraphics[width=\textwidth]{w_69014.png}
+    \includegraphics[width=\textwidth]{w_69026.png}
+
+    \caption{PSF whisker comparison.  Rows indicate different exposures.  The
+    left column is data, the right column is the best fitting model.}
+
+\end{figure}
 
 \end{document}
